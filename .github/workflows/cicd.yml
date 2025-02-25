@@ -2,70 +2,44 @@ name: FastAPI CI/CD
 
 on:
   push:
-    branches: [ "main" ]  # main 브랜치에 push 시 실행
+    branches: [ "main" ]
 
 jobs:
   build:
-    name: Build & Docker Push
     runs-on: ubuntu-latest
     steps:
-
-      # 1️⃣ 코드 체크아웃
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 2️⃣ Python 환경 설정 (필요시)
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+      - name: Build Docker Image
+        run: docker build -t kakaoteckhackathonnews/ai-server:latest .
 
-      # 3️⃣ `requirements.txt` 설치 및 테스트 실행
-      - name: Install dependencies & Run Tests
-        run: |
-          pip install -r requirements.txt
-          pytest || echo "Tests failed, but continuing..."
-
-      # 4️⃣ Docker 이미지 빌드
-      - name: Docker Image Build
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_FASTAPI_IMAGE }} .
-
-      # 5️⃣ Docker Hub 로그인
       - name: Docker Hub Login
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      # 6️⃣ Docker Hub에 이미지 Push
-      - name: Docker Hub Push
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_FASTAPI_IMAGE }}
+      - name: Push Docker Image
+        run: docker push kakaoteckhackathonnews/ai-server:latest
 
   deploy:
-    name: Deploy to EC2
-    needs: build
     runs-on: ubuntu-latest
+    needs: build
     steps:
-
-      # 7️⃣ AWS EC2에 SSH 접속하여 배포 진행
-      - name: AWS EC2 Connection
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          port: ${{ secrets.EC2_SSH_PORT }}
-          timeout: 60s
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          port: ${{ secrets.EC2_PORT }}
           script: |
-            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            export DOCKERHUB_FASTAPI_IMAGE=${{ secrets.DOCKERHUB_FASTAPI_IMAGE }}
+            docker network create news-network || true
 
-            # 기존 FastAPI 컨테이너 종료 및 삭제
-            docker stop fastapi-server || true
-            docker rm fastapi-server || true
+            docker stop ai-server || true
+            docker rm ai-server || true
 
-            # 최신 이미지 Pull
-            docker pull $DOCKERHUB_USERNAME/$DOCKERHUB_FASTAPI_IMAGE:latest
+            docker pull kakaoteckhackathonnews/ai-server:latest
 
-            # FastAPI 컨테이너 실행
-            docker run -d --name fastapi-server -p 8000:8000 $DOCKERHUB_USERNAME/$DOCKERHUB_FASTAPI_IMAGE:latest
+            docker run -d --name ai-server --network news-network -p 8000:8000 kakaoteckhackathonnews/ai-server:latest
