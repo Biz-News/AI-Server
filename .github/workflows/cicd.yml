@@ -28,7 +28,7 @@ jobs:
 
       # 4. Docker 이미지 빌드
       - name: Docker Image Build
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_FASTAPI_IMAGE }} .
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_IMAGENAME }} .
 
       # 5. Docker Hub 로그인
       - name: Docker Hub Login
@@ -39,7 +39,7 @@ jobs:
 
       # 6. Docker Hub에 이미지 Push
       - name: Docker Hub Push
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_FASTAPI_IMAGE }}
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_IMAGENAME }}
 
   deploy:
     name: Deploy to EC2
@@ -58,16 +58,16 @@ jobs:
           timeout: 60s
           script: |
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            export DOCKERHUB_FASTAPI_IMAGE=${{ secrets.DOCKERHUB_FASTAPI_IMAGE }}
-
+            export DOCKERHUB_IMAGENAME=${{ secrets.DOCKERHUB_IMAGENAME }}
+            
             docker network create news-network || true
 
-            # 기존 FastAPI 컨테이너 종료 및 삭제
-            docker stop fastapi-server || true
-            docker rm fastapi-server || true
+            # 기존 ai-server 컨테이너 종료 및 삭제
+            docker stop $DOCKERHUB_IMAGENAME || true
+            docker rm $DOCKERHUB_IMAGENAME || true
 
             # 최신 이미지 Pull
-            docker pull $DOCKERHUB_USERNAME/$DOCKERHUB_FASTAPI_IMAGE:latest
+            docker pull $DOCKERHUB_USERNAME/$DOCKERHUB_IMAGENAME:latest
 
-            # FastAPI 컨테이너 실행
-            docker run -d --name fastapi-server --network news-network -p 8000:8000 $DOCKERHUB_USERNAME/$DOCKERHUB_FASTAPI_IMAGE:latest
+            # ai-server 컨테이너 실행
+            docker run -d --name $DOCKERHUB_IMAGENAME --network news-network -p 8000:8000 $DOCKERHUB_USERNAME/$DOCKERHUB_IMAGENAME:latest
