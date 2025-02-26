@@ -1,13 +1,16 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chat_models import init_chat_model
 from langchain_core.prompts import PromptTemplate
+import os
 from dotenv import load_dotenv
 import json
 import re
 
 class SingleResponseModel:
   def __init__(self, prompt_text):
-    load_dotenv()
+    # .env 파일 로드 (로컬 환경에서만)
+    if os.getenv("CI") is None:  # CI/CD 환경이 아니면 .env 로드
+        load_dotenv()
     self.model = ChatGoogleGenerativeAI(
         model='gemini-1.5-pro',
         max_tokens=None,

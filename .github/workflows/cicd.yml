@@ -59,7 +59,8 @@ jobs:
           script: |
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             export DOCKERHUB_IMAGENAME=${{ secrets.DOCKERHUB_IMAGENAME }}
-            
+            export GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}
+
             docker network create news-network || true
 
             # 기존 ai-server 컨테이너 종료 및 삭제
@@ -69,5 +70,8 @@ jobs:
             # 최신 이미지 Pull
             docker pull $DOCKERHUB_USERNAME/$DOCKERHUB_IMAGENAME:latest
 
-            # ai-server 컨테이너 실행
-            docker run -d --name $DOCKERHUB_IMAGENAME --network news-network -p 8000:8000 $DOCKERHUB_USERNAME/$DOCKERHUB_IMAGENAME:latest
+            # ai-server 컨테이너 실행 (환경 변수 추가)
+            docker run -d --name $DOCKERHUB_IMAGENAME \
+              --network news-network -p 8000:8000 \
+              -e GOOGLE_API_KEY=$GOOGLE_API_KEY \
+              $DOCKERHUB_USERNAME/$DOCKERHUB_IMAGENAME:latest
