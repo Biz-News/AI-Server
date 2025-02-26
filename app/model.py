@@ -8,13 +8,13 @@ import re
 class SingleResponseModel:
   def __init__(self, prompt_text):
     load_dotenv()
-    self.model = ChatGoogleGenerativeAI(
-        model='gemini-1.5-pro',
-        max_tokens=None,
-        timeout=None,
-        max_retries=3,
-    )
-    model = init_chat_model("gpt-4o", model_provider="openai")
+    # self.model = ChatGoogleGenerativeAI(
+    #     model='gemini-1.5-pro',
+    #     max_tokens=None,
+    #     timeout=None,
+    #     max_retries=3,
+    # )
+    self.model = init_chat_model("gpt-4o", model_provider="openai")
     self.prompt_template = PromptTemplate.from_template(prompt_text)
   def get_prompt(self, **kwargs):
     return self.prompt_template.invoke(kwargs)
