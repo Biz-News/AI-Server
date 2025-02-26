@@ -1,4 +1,4 @@
-from news import News
+from app.news import News
 
 raws = """
                   ### 뉴스1

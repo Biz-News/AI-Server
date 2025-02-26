@@ -2,11 +2,11 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
-from model import SingleResponseModel
-from raw import keywords_filtering_prompt_text, summary_prompt_text
+from app.model import SingleResponseModel
+from app.raw import keywords_filtering_prompt_text, summary_prompt_text
 
-from test_news import news
-from test_keywords import keywords
+from test.test_news import news
+from test.test_keywords import keywords
 
 keywords_filtering_model = SingleResponseModel(keywords_filtering_prompt_text)
 summary_model = SingleResponseModel(summary_prompt_text)
