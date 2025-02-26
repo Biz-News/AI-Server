@@ -3,6 +3,7 @@ from fastapi import FastAPI
 app = FastAPI()
 
 from app.model import SingleResponseModel
+from app.DB import DB
 from app.raw import keywords_filtering_prompt_text, summary_prompt_text
 
 from test.test_news import news
@@ -30,6 +31,10 @@ async def get_keywords_about_company(company: str, news_ids: str):
     # news = get_news(news_ids) # get_news(news_ids) : 빅토리아가 구축해놓은 News RDBMS에서 News를 전부 가져오는 함수 -> 이것 또한 빅이 RDBMS만 구축해주면 됨
     response = summary_model.get_response_by_json(company=company, news=news)
     return response
+
+@app.get("/company/{company}")
+async def for_front(company: str):
+    
   
 # if __name__ == "__main__":
 #     response = keywords_filtering_model.get_response_by_json(company="삼성전자", keywords=keywords)
