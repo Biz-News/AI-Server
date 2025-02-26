@@ -1,5 +1,5 @@
-from model import SingleResponseModel
-from raw import keywords_filtering_prompt_text, summary_prompt_text
+from app.model import SingleResponseModel
+from app.raw import keywords_filtering_prompt_text, summary_prompt_text
 
 from test_news import news
 from test_keywords import keywords
