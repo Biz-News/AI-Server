@@ -60,6 +60,7 @@ jobs:
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             export DOCKERHUB_IMAGENAME=${{ secrets.DOCKERHUB_IMAGENAME }}
             export GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}
+            export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
             docker network create news-network || true
 
@@ -70,8 +71,12 @@ jobs:
             # 최신 이미지 Pull
             docker pull $DOCKERHUB_USERNAME/$DOCKERHUB_IMAGENAME:latest
 
-            # ai-server 컨테이너 실행 (환경 변수 추가)
+            # `.env` 파일 생성하여 환경 변수 설정
+            echo "GOOGLE_API_KEY=$GOOGLE_API_KEY" > .env
+            echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
+
+            # 컨테이너 실행 시 `.env` 적용
             docker run -d --name $DOCKERHUB_IMAGENAME \
               --network news-network -p 8000:8000 \
-              -e GOOGLE_API_KEY=$GOOGLE_API_KEY \
+              --env-file .env \
               $DOCKERHUB_USERNAME/$DOCKERHUB_IMAGENAME:latest

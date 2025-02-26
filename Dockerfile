@@ -8,8 +8,12 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 4️⃣ 소스 코드 복사
+# 4️⃣ 환경 변수 설정 (환경 변수 자동 로드)
+ENV GOOGLE_API_KEY=${GOOGLE_API_KEY}
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+
+# 5️⃣ 소스 코드 복사
 COPY . .
 
-# 5️⃣ FastAPI 서버 실행
+# 6️⃣ FastAPI 실행
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
