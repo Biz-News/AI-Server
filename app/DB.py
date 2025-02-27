@@ -47,10 +47,6 @@ class DB:
         sql = f"SELECT * FROM company WHERE company_id = '{company_id}'"
         result = self.query(sql)
         return result[0]['company']
-    
-    def get_keywords(self, keyword_list):
-        sql = f"SELECT * FROM keyword WHERE keyword IN ({', '.join(map(lambda x: f"'{x}'", keyword_list))})"
-        return self.query(sql)
         
     def get_every_keyword(self):
         sql = "SELECT * FROM keyword" # TODO keyword 테이블 이름 바뀌면 수정
