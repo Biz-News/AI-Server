@@ -261,7 +261,7 @@ async def get_summary(body: NewsID):
     sql = f"SELECT news_id, title, sub_title, url, date, article_text FROM news WHERE news_id IN ({', '.join(news_id)})"
     news = db.query(sql)
     news_text_list = [
-        f"news_id : {n["news_id"]}\ntitle : {n["title"]}\nsub_title : {n["sub_title"]}\ncontent : {n["article_text"]}"
+        f'news_id : {n["news_id"]}\ntitle : {n["title"]}\nsub_title : {n["sub_title"]}\ncontent : {n["article_text"]}'
         for n in news
     ]
     
