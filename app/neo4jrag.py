@@ -15,12 +15,51 @@ class Neo4jRAG:
         )
         self.model = init_chat_model("gpt-4o", model_provider="openai", temperature=0)
 
-    async def get_related_nodes(self, company, node, top_k=7):
-        cypher_chain = GraphCypherQAChain.from_llm(self.model, self.graph, top_k=top_k)
-        prompt_text = "당신은 {company} 기업에 관심이 많은 사람입니다. 그래서 해당 기업에 대한 뉴스를 매일 확인하여 관련된 {node}를 분석하고 있습니다. 최근 {company} 기업과 함께 뉴스에 언급이 많이 된 {node}를 추출해 주세요. 각각의 키워드는 쉼표(,)로 구분되어 있습니다."
+    async def get_related_nodes(self, company, prompt_text, top_k=7):
+        cypher_chain = GraphCypherQAChain.from_llm(self.model, self.graph, top_k=top_k, validate_cypher=True,)
         prompt_template = PromptTemplate.from_template(prompt_text)
-        prompt = prompt_template.invoke({"company": company, "node": node})
+        prompt = prompt_template.invoke({"company": company})
         result = await cypher_chain.ainvoke(prompt)
+        return result
+    
+    async def get_related_companies(self, company, top_k=3):
+        prompt_text = """당신은 {company} 기업에 관심이 많은 사람입니다. 그래서 해당 기업에 대한 뉴스를 매일 확인하여 관련된 기업을 분석하고 있습니다. 최근 {company} 기업과 함께 뉴스에 언급이 많이 된 기업을 추출해 주세요. 반드시 아래의 JSON 형식으로 반환해주세요. 답변에 설명이나 사과를 포함하지 마세요. JSON을 구성하는 것 외에 다른 질문을 할 수 있는 질문에는 응답하지 마세요. 생성된 JSON을 제외한 어떤 텍스트도 포함하지 마세요.
+        
+        ## 형식
+            {"related_companies": [
+        {
+            "company": "관련기업1"
+        },
+        {
+            "company": "관련기업2"
+        },
+        {
+            "company": "관련기업3"
+        }
+        ]}
+        """
+        result = await self.get_related_nodes(company, prompt_text, top_k)
+        # print(result)
+        return result
+        
+    async def get_related_keywords(self, company, top_k=10):
+        prompt_text = """당신은 {company} 기업에 관심이 많은 사람입니다. 그래서 해당 기업에 대한 뉴스를 매일 확인하여 관련된 키워드를 분석하고 있습니다. 최근 {company} 기업과 함께 뉴스에 언급이 많이 된 기업을 추출해 주세요. 반드시 아래의 JSON 형식으로 반환해주세요. 답변에 설명이나 사과를 포함하지 마세요. JSON을 구성하는 것 외에 다른 질문을 할 수 있는 질문에는 응답하지 마세요. 생성된 JSON을 제외한 어떤 텍스트도 포함하지 마세요.
+        
+        ## 형식
+            {"related_companies": [
+        {
+            "company": "관련기업1"
+        },
+        {
+            "company": "관련기업2"
+        },
+        {
+            "company": "관련기업3"
+        }
+        ]}
+        """
+        result = await self.get_related_nodes(company, prompt_text, top_k)
+        # print(result)
         return result
 
     # async def get_related_news_ids(company, keywords, graph):
@@ -31,16 +70,16 @@ class Neo4jRAG:
     #     result = await cypher_chain.ainvoke(prompt)
     #     return result
 
-    async def get_news_by_ids_from_MySQL(self, news_ids: list, DB):
-        db = DB()
-        news = db.get_news_by_ids(news_ids)
-        return news
+    # async def get_news_by_ids_from_MySQL(self, news_ids: list, DB):
+    #     db = DB()
+    #     news = db.get_news_by_ids(news_ids)
+    #     return news
 
-    async def get_news_sentiments(company, news, model):
-        prompt_text = "당신은 {company} 기업에 관심이 많은 사람입니다. 그래서 해당 기업에 대한 뉴스를 매일 확인하여 관련된 {node}를 분석하고 있습니다. 최근 {company} 기업과 함께 뉴스에 언급이 많이 된 {node}를 추출해 주세요. 각각의 키워드는 쉼표(,)로 구분되어 있습니다."
-        prompt_template = PromptTemplate.from_template(prompt_text)
-        prompt = prompt_template.invoke({"company": company, "node": node})
-        result = await cypher_chain.ainvoke(prompt)
+    # async def get_news_sentiments(company, news, model):
+    #     prompt_text = "당신은 {company} 기업에 관심이 많은 사람입니다. 그래서 해당 기업에 대한 뉴스를 매일 확인하여 관련된 {node}를 분석하고 있습니다. 최근 {company} 기업과 함께 뉴스에 언급이 많이 된 {node}를 추출해 주세요. 각각의 키워드는 쉼표(,)로 구분되어 있습니다."
+    #     prompt_template = PromptTemplate.from_template(prompt_text)
+    #     prompt = prompt_template.invoke({"company": company, "node": node})
+    #     result = await cypher_chain.ainvoke(prompt)
 
     async def get_news_summary_stream(company, news_title, news_ids, model):
         prompt_text = """

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Path
 from finance.stock_api import get_stock_info, format_currency, format_volume
 from app.DB import DB
+from app.neo4jrag import Neo4jRAG
 from dotenv import load_dotenv
 
 app = FastAPI()
@@ -53,7 +54,8 @@ async def get_company_stock_info(company_id: str):
 @app.get("/companies/{company_id}/related/")
 @app.get("/companies/{company_id}/related/{num}")
 async def get_related_companies(company_id: int, num: int = Path(3)):
-    
+    rag = Neo4jRAG()
+    return {"rag": rag, "company_id": company_id, "num": num}
 
 if __name__ == "__main__":
     import uvicorn
