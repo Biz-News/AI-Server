@@ -1,6 +1,35 @@
 from datetime import datetime, timedelta
 from pykrx import stock
 
+def format_currency(value):
+    """
+    주어진 숫자를 천만원, 억 단위로 변환하거나, 3자리마다 콤마를 추가하여 '원' 단위를 붙인다.
+    """
+    if value >= 10_000_000_000:  # 100억 이상
+        return f"{value // 1_0000_0000}억{(value % 1_0000_0000) // 1_0000}천만원 원" if value % 1_0000_0000 != 0 else f"{value // 1_0000_0000}억원"
+    elif value >= 100_000_000:  # 1억 이상
+        return f"{value // 1_0000_0000}억원"
+    elif value >= 10_000_000:  # 1천만원 이상
+        return f"{value // 1_0000}천만원 원"
+    else:
+        return f"{format(value, ',')}원"  # 3자리 콤마 추가
+
+def format_volume(value):
+    """
+    거래량(주 단위)은 천만원/억원 변환 없이 3자리마다 콤마를 추가하고 '주' 단위를 붙인다.
+    """
+    return f"{format(value, ',')}주"
+
+def format_currency(value):
+    """
+    금액을 천만원/억원 단위로 변환 (억 단위까지만 변환)
+    """
+    if value >= 100_000_000:  # 1억 이상
+        return f"{value // 1_0000_0000}억원"
+    else:
+        return f"{format(value, ',')}원"  # 3자리 콤마 추가
+
+
 def get_stock_info(ticker):
     """
     주어진 티커(종목코드)에 대한 주식 정보를 가져옵니다.
