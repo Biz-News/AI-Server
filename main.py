@@ -86,10 +86,16 @@ async def get_stock_chart(days: int, ticker: str):
     
 # 연관 기업
 @app.get("/companies/{company_id}/related/")
-@app.get("/companies/{company_id}/related/{num}")
-async def get_related_companies(company_id: int, num: int = Path(3)):
+def get_related_companies(company_id: str):
     rag = Neo4jRAG()
-    return {"rag": rag, "company_id": company_id, "num": num}
+    db = DB()
+    company = db.query(f'SELECT company FROM company WHERE company_id = "{company_id}"')[0]['company']
+    related_companies_name = rag.get_related_companies(company)['related_companies']
+    # [{"company":"SK하이닉스"},{"company":"LG전자"},{"company":"삼성SDI"}]
+    related_companies = [{'company_id': db.query(f"SELECT company_id FROM company WHERE company = '{company['company']}'")[0]['company_id'], 'company': company['company']} for company in related_companies_name]
+    db.close()
+    return {'company_id': company_id, "company": company, "related_companies": related_companies}
+
 
 if __name__ == "__main__":
     import uvicorn
