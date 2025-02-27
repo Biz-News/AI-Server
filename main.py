@@ -199,7 +199,7 @@ async def get_sentiment(body: NewsID):
     sql = f"SELECT news_id, title, sub_title, url, date, article_text FROM news WHERE news_id IN ({', '.join(news_id)})"
     news = db.query(sql)
     news_text_list = [
-        f"news_id : {n["news_id"]}\ntitle : {n["title"]}\nsub_title : {n["sub_title"]}\ncontent : {n["article_text"]}" for n in news
+        f'news_id : {n["news_id"]}\ntitle : {n["title"]}\nsub_title : {n["sub_title"]}\ncontent : {n["article_text"]}' for n in news
     ]
     news_dict = dict([(n['news_id'], n) for n in news])
     news_text = "\n\n".join(news_text_list)
