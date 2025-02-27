@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Path
 from finance.stock_api import get_stock_info, format_currency, format_volume
 from app.DB import DB
+from app.neo4jrag import Neo4jRAG
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from pykrx import stock
@@ -83,6 +84,13 @@ async def get_stock_chart(days: int, ticker: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
+# 연관 기업
+@app.get("/companies/{company_id}/related/")
+@app.get("/companies/{company_id}/related/{num}")
+async def get_related_companies(company_id: int, num: int = Path(3)):
+    rag = Neo4jRAG()
+    return {"rag": rag, "company_id": company_id, "num": num}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
