@@ -158,6 +158,7 @@ def get_related_companies(company_id: str):
 # 관련 뉴스
 @app.get("/news/{company_id}")
 def get_news(company_id: str):
+    print('here!')
     # rag = Neo4jRAG()
     db = DB()
     company = db.query(
@@ -180,8 +181,8 @@ def get_news(company_id: str):
 
 
 class NewsID(BaseModel):
+    company_id: str
     news_id: list
-
 
 # 관련 뉴스 - 감성
 # @app.get('/news/sentiment/{company}/{news_ids}')
@@ -198,8 +199,7 @@ async def get_sentiment(body: NewsID):
     sql = f"SELECT news_id, title, sub_title, url, date, article_text FROM news WHERE news_id IN ({', '.join(news_id)})"
     news = db.query(sql)
     news_text_list = [
-        f"news_id : {n["news_id"]}\ntitle : {n["title"]}\nsub_title : {n["sub_title"]}\ncontent : {n["article_text"]}"
-        for n in news
+        f"news_id : {n["news_id"]}\ntitle : {n["title"]}\nsub_title : {n["sub_title"]}\ncontent : {n["article_text"]}" for n in news
     ]
     news_dict = dict([(n['news_id'], n) for n in news])
     news_text = "\n\n".join(news_text_list)
@@ -208,33 +208,33 @@ async def get_sentiment(body: NewsID):
 당신은 10년차 증권사 애널리스트입니다. 특히 {company} 기업의 주가에 관심이 많아 관련 뉴스를 매일 확인하고 분석하여 주가에 미치는 영향을 판단합니다.
 아래의 제약조건과 입력문을 토대로 최고의 결과를 출력해주세요. 100점 만점의 결과를 출력해주세요.
 
-# 제약조건
-1. 뉴스는 3가지 뉴스가 주어집니다.
-2. 각 뉴스별로, 해당 뉴스가 {company} 기업의 주가에 미치는 영향을 분석(긍정 또는 부정)을 하여 'sentiment'에 결과를 출력합니다. 
-3. 해당 뉴스를 보고, 기업의 주가에 영향을 많이 미치는 상위 3개의 단어를 키워드로 선정해주세요.
-4. 아래의 형식에 따라 JSON 형식으로 결과를 출력해 주세요. 그 외 어떠한 텍스트도 출력하지 마세요
-## 형식
-{{
-    "news": [{{
-        "news_id": "id1",
-        "sentiment": "긍정/부정",
-        "keywords: ["키워드1", "키워드2", "키워드3"] 
-    }},
-    {{
-        "news_id": "id2",
-        "sentiment": "긍정/부정",
-        "keywords: ["키워드1", "키워드2", "키워드3"] 
-    }},
-    {{
-        "news_id": "id3",
-        "sentiment": "긍정/부정",
-        "keywords: ["키워드1", "키워드2", "키워드3"] 
-    }},]
-}}
+# # 제약조건
+# 1. 뉴스는 3가지 뉴스가 주어집니다.
+# 2. 각 뉴스별로, 해당 뉴스가 {company} 기업의 주가에 미치는 영향을 분석(긍정 또는 부정)을 하여 'sentiment'에 결과를 출력합니다. 
+# 3. 해당 뉴스를 보고, 기업의 주가에 영향을 많이 미치는 상위 3개의 단어를 키워드로 선정해주세요.
+# 4. 아래의 형식에 따라 JSON 형식으로 결과를 출력해 주세요. 그 외 어떠한 텍스트도 출력하지 마세요
+# ## 형식
+# {{
+#     "news": [{{
+#         "news_id": "id1",
+#         "sentiment": "긍정/부정",
+#         "keywords: ["키워드1", "키워드2", "키워드3"] 
+#     }},
+#     {{
+#         "news_id": "id2",
+#         "sentiment": "긍정/부정",
+#         "keywords: ["키워드1", "키워드2", "키워드3"] 
+#     }},
+#     {{
+#         "news_id": "id3",
+#         "sentiment": "긍정/부정",
+#         "keywords: ["키워드1", "키워드2", "키워드3"] 
+#     }},]
+# }}
 
-## 뉴스
-{news_text}
-"""
+# ## 뉴스
+# {news_text}
+# """
     db.close()
     response = rag.get_response_from_prompt(
         prompt_text, company=company, news_text=news_text
