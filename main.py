@@ -51,8 +51,8 @@ async def get_company_stock_info(company_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.get("/companies/stock-info/chart/{days}")
-async def get_stock_chart(days: int, ticker: str):
+@app.get("/companies/stock-info/{ticker}/chart/{days}")
+async def get_stock_chart(ticker: str, days: int):
     try:
         # 오늘 날짜 기준으로 시작 날짜 계산
         today = datetime.today()
