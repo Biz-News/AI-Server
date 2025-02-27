@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from finance.stock_api import get_stock_info, format_currency, format_volume
 from app.DB import DB
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
+from pykrx import stock
 
 app = FastAPI()
 db = DB()  # DB 클래스 인스턴스 생성
@@ -41,11 +43,43 @@ async def get_company_stock_info(company_id: str):
             "change_percent": stock_info.get("change_percent", 0.0)
         }
 
+        print("Formatted response:", formatted_response)  # FastAPI가 반환하기 전에 확인
+        print(type(formatted_response))
 
         return formatted_response
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.get("/companies/stock-info/chart/{days}")
+async def get_stock_chart(days: int, ticker: str):
+    try:
+        # 오늘 날짜 기준으로 시작 날짜 계산
+        today = datetime.today()
+        start_date = (today - timedelta(days=days)).strftime("%Y%m%d")
+        end_date = today.strftime("%Y%m%d")
 
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=f"주식 정보 조회 중 오류: {str(e)}")
+        # Pykrx를 이용하여 OHLCV 데이터 가져오기
+        df = stock.get_market_ohlcv_by_date(start_date, end_date, ticker)
+
+        # DataFrame이 비어있는 경우 예외 처리
+        if df.empty:
+            raise HTTPException(status_code=404, detail="해당 기간 동안 주식 데이터가 없습니다.")
+
+        # JSON 응답 포맷 변경
+        stock_data = [
+            {
+                "x": date.strftime("%Y-%m-%d"),
+                "o": row["시가"],
+                "h": row["고가"],
+                "l": row["저가"],
+                "c": row["종가"]
+            }
+            for date, row in df.iterrows()
+        ]
+
+        return {"stockData": stock_data}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
