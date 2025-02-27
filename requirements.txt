@@ -10,3 +10,4 @@ pandas
 yfinance
 pykrx
 neo4j
+pydantic
