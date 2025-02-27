@@ -1,11 +1,11 @@
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import FastAPI, HTTPException
 from finance.stock_api import get_stock_info, format_currency, format_volume
 from app.DB import DB
 from app.neo4jrag import Neo4jRAG
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 app = FastAPI()
-db = DB()  # DB 클래스 인스턴스 생성
 
 # .env 파일 로드
 load_dotenv()
@@ -18,6 +18,7 @@ async def root():
 # 기업정보 가져오기
 @app.get("/companies/stock-info/{company_id}")
 async def get_company_stock_info(company_id: str):
+    db = DB()
     # 1. MySQL에서 기업 정보 가져오기 (가정)
     company_info = db.get_company_info(company_id)
     if not company_info:
@@ -42,20 +43,26 @@ async def get_company_stock_info(company_id: str):
             "change_percent": stock_info.get("change_percent", 0.0)
         }
 
-
         return formatted_response
 
     except ValueError as e:
         raise HTTPException(status_code=500, detail=f"주식 정보 조회 중 오류: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    finally:
+        db.close()
     
 # 연관 기업
 @app.get("/companies/{company_id}/related/")
-@app.get("/companies/{company_id}/related/{num}")
-async def get_related_companies(company_id: int, num: int = Path(3)):
+def get_related_companies(company_id: str):
     rag = Neo4jRAG()
-    return {"rag": rag, "company_id": company_id, "num": num}
+    db = DB()
+    company = db.query(f'SELECT company FROM company WHERE company_id = "{company_id}"')[0]['company']
+    related_companies_name = rag.get_related_companies(company)['related_companies']
+    # [{"company":"SK하이닉스"},{"company":"LG전자"},{"company":"삼성SDI"}]
+    related_companies = [{'company_id': db.query(f"SELECT company_id FROM company WHERE company = '{company['company']}'")[0]['company_id'], 'company': company['company']} for company in related_companies_name]
+    db.close()
+    return {'company_id': company_id, "company": company, "related_companies": related_companies}
 
 if __name__ == "__main__":
     import uvicorn
