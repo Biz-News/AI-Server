@@ -5,6 +5,7 @@ from app.neo4jrag import Neo4jRAG
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from pykrx import stock
+from pydantic import BaseModel
 
 app = FastAPI()
 db = DB()  # DB 클래스 인스턴스 생성
@@ -125,7 +126,30 @@ def get_related_companies(company_id: str):
     db.close()
     return response
 
+class CompanyKeywords(BaseModel):
+    company_id: str
+    keyword_id_list: list
 
+@app.post('/news/id')
+def get_news(body: CompanyKeywords):
+    # rag = Neo4jRAG()
+    db = DB()
+    company = db.query(f"SELECT company FROM company WHERE company_id = '{body['company_id']}'")[0]['company']
+
+    sql = f"""SELECT 
+        news_id,
+        (LENGTH(title) - LENGTH(REPLACE(title, '{company}', ''))) / LENGTH('{company}') +
+        (LENGTH(article_text) - LENGTH(REPLACE(article_text, '{company}', ''))) / LENGTH('{company}') AS keyword_count
+    FROM 
+        news
+    ORDER BY 
+        keyword_count DESC
+    LIMIT 3;"""
+    news = db.query(sql)
+    news_id = [n['news_id'] for n in news]
+    db.close()
+    return {"news_id": news_id}
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
