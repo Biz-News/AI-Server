@@ -2,7 +2,7 @@ import os
 import mysql.connector
 from mysql.connector import errorcode
 from dotenv import load_dotenv
-from news import News
+from app.news import News
 
 # 어떤 query가 필요하나
 # 1. keywords 전체
@@ -22,6 +22,7 @@ class DB:
             "password": password,
             "database": name,
         }
+        "MATCH (k:Keyword)-[:HAS_KEYWORD]-(k:Keyword {name: 'company'})"
         self.cnx = mysql.connector.connect(**db_config)
         self.cursor = self.cnx.cursor(dictionary=True)
         
@@ -31,13 +32,6 @@ class DB:
         result = self.cursor.fetchall()
         keywords = [keyword_tuple[0] for keyword_tuple in result]
         return keywords
-    
-    def get_news_by_ids(self, news_ids: list):
-        sql = f"SELECT * FROM news WHERE news_id IN ({', '.join(map(str, news_ids))})" # TODO news 테이블 이름 바뀌면 수정
-        self.cursor.execute(sql)
-        result = self.cursor.fetchall()
-        news = [News(*news_tuple) for news_tuple in result] # TODO news가 어떻게 생겼냐에 따라 수정
-        return news
     
     def get_company_info(self, company_id):
         sql = "SELECT company_id, company, ticker FROM company WHERE company_id = %s"
@@ -78,6 +72,4 @@ class DB:
         
 if __name__ == '__main__':
     db = DB()
-    db.cursor.execute('SELECT * FROM keyword')
-    result = db.cursor.fetchall()
-    print(result[0])
+    db.close()
