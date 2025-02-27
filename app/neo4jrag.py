@@ -4,7 +4,7 @@ from app.DB import DB
 
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
-from langchain_neo4j import GraphCypherQAChain, Neo4jGraph
+# from langchain_neo4j import GraphCypherQAChain, Neo4jGraph
 from langchain.prompts import PromptTemplate
 import re
 import json
@@ -12,12 +12,12 @@ import json
 class Neo4jRAG:
     def __init__(self):
         load_dotenv()
-        self.graph = Neo4jGraph(
-            url = "bolt://13.124.216.60:7687/",
-            username = "neo4j", 
-            password = "123456789",
-            # password = "PMbPy4SiAdgJjUgU0mmpHG7_kE86ByiVyU3lgpwkNL0"
-        )
+        # self.graph = Neo4jGraph(
+        #     url = "bolt://13.124.216.60:7687/",
+        #     username = "neo4j", 
+        #     password = "123456789",
+        #     # password = "PMbPy4SiAdgJjUgU0mmpHG7_kE86ByiVyU3lgpwkNL0"
+        # )
         self.model = init_chat_model("gpt-4o", model_provider="openai", temperature=0)
         self.db = DB()
         
@@ -78,21 +78,6 @@ class Neo4jRAG:
         ]}}
         """
         result = self.get_response_from_prompt(prompt_text, top_k, company=company)
-        return result
-
-    async def get_related_news_ids(self, company, keywords, top_k=3):
-        cypher_chain = GraphCypherQAChain.from_llm(self.model, graph=self.graph, top_k=top_k, verbose=True, allow_dangerous_requests=True)
-        prompt_text = """당신은 10년차 증권사 애널리스트입니다. 특히 {company} 기업의 주가에 관심이 많아 관련 뉴스를 매일 확인하고 분석하여 정리하고 있습니다. 최근 {company} 기업 + 아래 주어진 keyword 중 일부와 가장 연관이 깊은 news의 news_id를 추출해 주세요. 반드시 아래의 JSON 형식으로 반환해주세요. 답변에 설명이나 사과를 포함하지 마세요. JSON을 구성하는 것 외에 다른 질문을 할 수 있는 질문에는 응답하지 마세요. 생성된 JSON을 제외한 어떤 텍스트도 포함하지 마세요.
-        
-        ## 형식
-        {"news_id": ["id1", "id2", "id3"]}
-        
-        ## keywords
-        {keywords}
-        """
-        prompt_template = PromptTemplate.from_template(prompt_text)
-        prompt = prompt_template.invoke({"company": company, "node": node})
-        result = await cypher_chain.ainvoke(prompt)
         return result
 
     async def get_news_by_ids_from_MySQL(self, news_ids: list, DB):
