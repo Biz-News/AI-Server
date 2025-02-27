@@ -195,7 +195,7 @@ class NewsID(BaseModel):
 # async def get_sentiment(company:str, news_ids:str):
 #     news_id = news_ids.split(',')
 @app.post("/news/sentiment")
-async def get_sentiment(body: NewsID):
+def get_sentiment(body: NewsID):
     news_id = body["news_id"]
     company = db.query(
         f"SELECT company FROM company WHERE company_id = '{body['company_id']}'"
@@ -257,7 +257,7 @@ async def get_sentiment(body: NewsID):
 # async def get_summary(company:str, news_ids:str):
 #     news_id = news_ids.split(',')
 @app.post("/news/summary")
-async def get_summary(body: NewsID):
+def get_summary(body: NewsID):
     news_id = body["news_id"]
     company = db.query(
         f"SELECT company FROM company WHERE company_id = '{body['company_id']}'"
