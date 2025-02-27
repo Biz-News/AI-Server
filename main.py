@@ -96,6 +96,35 @@ def get_related_companies(company_id: str):
     db.close()
     return {'company_id': company_id, "company": company, "related_companies": related_companies}
 
+# 연관 키워드
+@app.get("/keywords/{company_id}/related/")
+def get_related_companies(company_id: str):
+    rag = Neo4jRAG()
+    db = DB()
+    company = db.query(f'SELECT company FROM company WHERE company_id = "{company_id}"')[0]['company']
+    response = rag.get_response_from_prompt("""최근 {company} 기업의 주가에 가장 영향이 있었던 단어 10개를 아래와 같은 형식으로 반환해줘. 그 외의 텍스트 출력은 일절 없어야해. 단어는 띄어쓰기 없는 단어를 말해
+
+#형식
+{{
+	  "keywords": [
+		  {{
+			  "keyword_id": "id1",
+			  "keyword": "keyword1"
+			}},
+			{{
+			  "keyword_id": "id2",
+			  "keyword": "keyword2"
+			}},
+			{{
+			  "keyword_id": "id3",
+			  "keyword": "keyword3"
+			}},
+			...
+	  ],
+}}""", company=company)
+    db.close()
+    return response
+
 
 if __name__ == "__main__":
     import uvicorn
