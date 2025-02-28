@@ -184,17 +184,14 @@ class NewsID(BaseModel):
     news_id: list
 
 # 관련 뉴스 - 감성
-# @app.get('/news/sentiment/{company}/{news_ids}')
-# async def get_sentiment(company:str, news_ids:str):
-#     news_id = news_ids.split(',')
-@app.post("/news/sentiment")
-def get_sentiment(body: NewsID):
-    news_id = body["news_id"]
-    company = db.query(
-        f"SELECT company FROM company WHERE company_id = '{body['company_id']}'"
-    )[0]["company"]
+@app.get('/news/sentiment/{company_id}/{news_ids}')
+async def get_sentiment(company_id:str, news_ids:str):
+    news_id = news_ids.split(',')
     rag = Neo4jRAG()
     db = DB()
+    company = db.query(
+        f"SELECT company FROM company WHERE company_id = '{company_id}'"
+    )[0]["company"]
     sql = f"SELECT news_id, title, sub_title, url, date, article_text FROM news WHERE news_id IN ({', '.join(news_id)})"
     news = db.query(sql)
     news_text_list = [
@@ -246,17 +243,14 @@ def get_sentiment(body: NewsID):
     return {"news": news_list}
 
 
-# @app.get('/news/summary/{company}/{news_ids}')
-# async def get_summary(company:str, news_ids:str):
-#     news_id = news_ids.split(',')
-@app.post("/news/summary")
-def get_summary(body: NewsID):
-    news_id = body["news_id"]
-    company = db.query(
-        f"SELECT company FROM company WHERE company_id = '{body['company_id']}'"
-    )[0]["company"]
+@app.get('/news/summary/{company_id}/{news_ids}')
+async def get_summary(company_id:str, news_ids:str):
+    news_id = news_ids.split(',')
     rag = Neo4jRAG()
     db = DB()
+    company = db.query(
+        f"SELECT company FROM company WHERE company_id = '{company_id}'"
+    )[0]["company"]
     sql = f"SELECT news_id, title, sub_title, url, date, article_text FROM news WHERE news_id IN ({', '.join(news_id)})"
     news = db.query(sql)
     news_text_list = [
